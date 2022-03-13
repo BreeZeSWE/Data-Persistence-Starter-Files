@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class MainManager : MonoBehaviour
 {
@@ -11,17 +14,56 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text BestText;
     public GameObject GameOverText;
     
     private bool m_Started = false;
     private int m_Points;
     
     private bool m_GameOver = false;
-
+    private string scoreTextPrefix; 
+    //privare string
     
+
+    private string GetHighScore()
+    {
+        return "Best Score: " + Globals.Instance.highScorePlayer + ": " +
+              Globals.Instance.highScore;
+    }
+
+    private void SetHighScoreText()
+    {
+        BestText.text = GetHighScore();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
+        //Assign BestScore
+        if (Globals.Instance.highScore <= 0)
+        {
+            BestText.text = "";
+        }
+        else
+        {
+            BestText.text = GetHighScore();
+        }
+        
+
+        //Asign PlayerName        
+        if (Globals.Instance.playerName.Trim(null) == "")    
+        {
+            scoreTextPrefix = "";
+        }
+        else
+        {
+            scoreTextPrefix = Globals.Instance.playerName + ":  ";
+        }
+        
+        ScoreText.text = scoreTextPrefix + "Score: 0";
+       
+        
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -65,12 +107,24 @@ public class MainManager : MonoBehaviour
     void AddPoint(int point)
     {
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        //ScoreText.text = $"Score : {m_Points}";
+        //ScoreText.text = Globals.Instance.playerName + ": " + "Score: " + m_Points;
+        ScoreText.text = scoreTextPrefix + "Score: " + m_Points;
     }
 
     public void GameOver()
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        // if Highscore beaten Show New Player And Score
+        if (m_Points > Globals.Instance.highScore)
+        {
+            Globals.Instance.highScore = m_Points;
+            Globals.Instance.highScorePlayer = Globals.Instance.playerName;
+            SetHighScoreText();
+            //Save HighScore
+            Globals.Instance.SaveHighScore();   
+        }
     }
 }
